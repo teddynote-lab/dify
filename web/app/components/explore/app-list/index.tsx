@@ -125,26 +125,38 @@ const Apps = ({
     icon_background,
     description,
   }) => {
-    const { export_data } = await fetchAppDetail(
-      currApp?.app.id as string,
-    )
-    const payload = {
-      mode: DSLImportMode.YAML_CONTENT,
-      yaml_content: export_data,
-      name,
-      icon_type,
-      icon,
-      icon_background,
-      description,
+    try {
+      const response = await fetchAppDetail(
+        currApp?.app.id as string,
+      )
+
+      if (!response || !response.export_data) {
+        Toast.notify({ type: 'error', message: t('app.createFromConfigFile.error') })
+        return
+      }
+
+      const payload = {
+        mode: DSLImportMode.YAML_CONTENT,
+        yaml_content: response.export_data,
+        name,
+        icon_type,
+        icon,
+        icon_background,
+        description,
+      }
+      await handleImportDSL(payload, {
+        onSuccess: () => {
+          setIsShowCreateModal(false)
+        },
+        onPending: () => {
+          setShowDSLConfirmModal(true)
+        },
+      })
     }
-    await handleImportDSL(payload, {
-      onSuccess: () => {
-        setIsShowCreateModal(false)
-      },
-      onPending: () => {
-        setShowDSLConfirmModal(true)
-      },
-    })
+ catch (error) {
+      console.error('Failed to fetch app detail:', error)
+      Toast.notify({ type: 'error', message: t('app.createFromConfigFile.error') })
+    }
   }
 
   const onConfirmDSL = useCallback(async () => {

@@ -128,10 +128,17 @@ const Apps = ({
     icon_background,
     description,
   }) => {
-    const { export_data, mode } = await fetchAppDetail(
-      currApp?.app.id as string,
-    )
     try {
+      const response = await fetchAppDetail(
+        currApp?.app.id as string,
+      )
+
+      if (!response || !response.export_data) {
+        notify({ type: 'error', message: t('app.createFromConfigFile.error') })
+        return
+      }
+
+      const { export_data, mode } = response
       const app = await importDSL({
         mode: DSLImportMode.YAML_CONTENT,
         yaml_content: export_data,
