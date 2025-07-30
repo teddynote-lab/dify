@@ -49,7 +49,7 @@ const getKey = (
   keywords: string,
 ) => {
   if (!pageIndex || previousPageData.has_more) {
-    const params: any = { url: 'apps', params: { page: pageIndex + 1, limit: 30, name: keywords, is_created_by_me: isCreatedByMe } }
+    const params: any = { url: 'apps', params: { page: pageIndex + 1, limit: 100, name: keywords, is_created_by_me: isCreatedByMe } }
 
     if (activeTab !== 'all')
       params.params.mode = activeTab
@@ -72,8 +72,8 @@ const List = () => {
   const [activeTab, setActiveTab] = useTabSearchParams({
     defaultTab: 'all',
   })
-  const { query: { tagIDs = [], keywords = '', isCreatedByMe: queryIsCreatedByMe = false }, setQuery } = useAppsQueryState()
-  const [isCreatedByMe, setIsCreatedByMe] = useState(queryIsCreatedByMe)
+  const { query: { tagIDs = [], keywords = '', isCreatedByMe: queryIsCreatedByMe = true }, setQuery } = useAppsQueryState()
+  const [isCreatedByMe, setIsCreatedByMe] = useState(true)
   const [tagFilterValue, setTagFilterValue] = useState<string[]>(tagIDs)
   const [searchKeywords, setSearchKeywords] = useState(keywords)
   const newAppCardRef = useRef<HTMLDivElement>(null)
@@ -168,10 +168,8 @@ const List = () => {
   }
 
   const handleCreatedByMeChange = useCallback(() => {
-    const newValue = !isCreatedByMe
-    setIsCreatedByMe(newValue)
-    setQuery(prev => ({ ...prev, isCreatedByMe: newValue }))
-  }, [isCreatedByMe, setQuery])
+    // Always keep it checked, do nothing
+  }, [])
 
   return (
     <>
@@ -193,6 +191,7 @@ const List = () => {
               label={t('app.showMyCreatedAppsOnly')}
               isChecked={isCreatedByMe}
               onChange={handleCreatedByMeChange}
+              disabled={true}
             />
             <TagFilter type='app' value={tagFilterValue} onChange={handleTagsChange} />
             <Input

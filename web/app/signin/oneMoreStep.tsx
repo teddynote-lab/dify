@@ -42,8 +42,8 @@ const reducer: Reducer<IState, IAction> = (state: IState, action: IAction) => {
       return {
         formState: 'initial',
         invitation_code: '',
-        interface_language: 'en-US',
-        timezone: 'Asia/Shanghai',
+        interface_language: 'ko-KR',
+        timezone: 'Asia/Seoul',
       }
     default:
       throw new Error('Unknown action.')
@@ -59,8 +59,8 @@ const OneMoreStep = () => {
   const [state, dispatch] = useReducer(reducer, {
     formState: 'initial',
     invitation_code: searchParams.get('invitation_code') || '',
-    interface_language: 'en-US',
-    timezone: 'Asia/Shanghai',
+    interface_language: 'ko-KR',
+    timezone: 'Asia/Seoul',
   })
   const { data, error } = useSWR(state.formState === 'processing'
     ? {

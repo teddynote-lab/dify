@@ -41,9 +41,11 @@ const WorkplaceSelector = () => {
                 p-0.5 hover:bg-state-base-hover ${open && 'bg-state-base-hover'} rounded-[10px]
               `,
             )}>
-              <div className='mr-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-components-icon-bg-blue-solid text-[13px] max-[800px]:mr-0'>
-                <span className='h-6 bg-gradient-to-r from-components-avatar-shape-fill-stop-0 to-components-avatar-shape-fill-stop-100 bg-clip-text align-middle font-semibold uppercase leading-6 text-shadow-shadow-1 opacity-90'>{currentWorkspace?.name[0]?.toLocaleUpperCase()}</span>
-              </div>
+              <img
+                src="/logo/profile.png"
+                alt={currentWorkspace?.name}
+                className='mr-1.5 h-6 w-6 shrink-0 rounded-md object-cover max-[800px]:mr-0'
+              />
               <div className='flex min-w-0 items-center'>
                 <div className={'system-sm-medium min-w-0  max-w-[149px] truncate text-text-secondary max-[800px]:hidden'}>{currentWorkspace?.name}</div>
                 <RiArrowDownSLine className='h-4 w-4 shrink-0 text-text-secondary' />
@@ -74,9 +76,11 @@ const WorkplaceSelector = () => {
                   {
                     workspaces.map(workspace => (
                       <div className='flex items-center gap-2 self-stretch rounded-lg py-1 pl-3 pr-2 hover:bg-state-base-hover' key={workspace.id} onClick={() => handleSwitchWorkspace(workspace.id)}>
-                        <div className='flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-components-icon-bg-blue-solid text-[13px]'>
-                          <span className='h-6 bg-gradient-to-r from-components-avatar-shape-fill-stop-0 to-components-avatar-shape-fill-stop-100 bg-clip-text align-middle font-semibold uppercase leading-6 text-shadow-shadow-1 opacity-90'>{workspace?.name[0]?.toLocaleUpperCase()}</span>
-                        </div>
+                        <img
+                          src="/logo/profile.png"
+                          alt={workspace?.name}
+                          className='h-6 w-6 shrink-0 rounded-md object-cover'
+                        />
                         <div className='system-md-regular line-clamp-1 grow cursor-pointer overflow-hidden text-ellipsis text-text-secondary'>{workspace.name}</div>
                         <PlanBadge plan={workspace.plan as Plan} />
                       </div>

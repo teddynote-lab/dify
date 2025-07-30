@@ -62,9 +62,11 @@ const MembersPage = () => {
     <>
       <div className='flex flex-col'>
         <div className='mb-4 flex items-center gap-3 rounded-xl border-l-[0.5px] border-t-[0.5px] border-divider-subtle bg-gradient-to-r from-background-gradient-bg-fill-chat-bg-2 to-background-gradient-bg-fill-chat-bg-1 p-3 pr-5'>
-          <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-components-icon-bg-blue-solid text-[20px]'>
-            <span className='bg-gradient-to-r from-components-avatar-shape-fill-stop-0 to-components-avatar-shape-fill-stop-100 bg-clip-text font-semibold uppercase text-shadow-shadow-1 opacity-90'>{currentWorkspace?.name[0]?.toLocaleUpperCase()}</span>
-          </div>
+          <img
+            src="/logo/profile.png"
+            alt={currentWorkspace?.name}
+            className='h-12 w-12 rounded-xl object-cover'
+          />
           <div className='grow'>
             <div className='system-md-semibold flex items-center gap-1 text-text-secondary'>
               <span>{currentWorkspace?.name}</span>

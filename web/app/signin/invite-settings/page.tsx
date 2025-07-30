@@ -11,7 +11,7 @@ import Input from '@/app/components/base/input'
 import { SimpleSelect } from '@/app/components/base/select'
 import Button from '@/app/components/base/button'
 import { timezones } from '@/utils/timezone'
-import { LanguagesSupported, languages } from '@/i18n-config/language'
+import { languages } from '@/i18n-config/language'
 import I18n from '@/context/i18n'
 import { activateMember, invitationCheck } from '@/service/common'
 import Loading from '@/app/components/base/loading'
@@ -26,8 +26,8 @@ export default function InviteSettingsPage() {
   const token = decodeURIComponent(searchParams.get('invite_token') as string)
   const { setLocaleOnClient } = useContext(I18n)
   const [name, setName] = useState('')
-  const [language, setLanguage] = useState(LanguagesSupported[0])
-  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Los_Angeles')
+  const [language, setLanguage] = useState('ko-KR')
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Seoul')
 
   const checkParams = {
     url: '/activate/check',
@@ -117,7 +117,7 @@ export default function InviteSettingsPage() {
         </label>
         <div className="mt-1">
           <SimpleSelect
-            defaultValue={LanguagesSupported[0]}
+            defaultValue={'ko-KR'}
             items={languages.filter(item => item.supported)}
             onSelect={(item) => {
               setLanguage(item.value as string)

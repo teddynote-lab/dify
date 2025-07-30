@@ -844,7 +844,7 @@ const translation = {
           '에이전트 전략을 구성한 후 이 노드는 나머지 구성을 자동으로 로드합니다. 이 전략은 다단계 도구 추론의 메커니즘에 영향을 미칩니다.',
       },
       pluginInstaller: {
-        install: '설치하다',
+        install: '설치',
         installing: '설치',
       },
       modelNotInMarketplace: {
@@ -877,7 +877,7 @@ const translation = {
       },
       installPlugin: {
         changelog: '변경 로그',
-        install: '설치하다',
+        install: '설치',
         desc: '다음 플러그인을 설치하려고 합니다.',
         cancel: '취소',
         title: '플러그인 설치',

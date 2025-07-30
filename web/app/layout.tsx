@@ -64,8 +64,9 @@ const LocaleLayout = async ({
       >
         <ThemeProvider
           attribute='data-theme'
-          defaultTheme='system'
-          enableSystem
+          defaultTheme='light'
+          forcedTheme='light'
+          enableSystem={false}
           disableTransitionOnChange
           enableColorScheme={false}
         >

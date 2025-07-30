@@ -47,7 +47,7 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate }: CreateAppProps)
   const [showAppIconPicker, setShowAppIconPicker] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [isAppTypeExpanded, setIsAppTypeExpanded] = useState(false)
+  const [isAppTypeExpanded, setIsAppTypeExpanded] = useState(true)
 
   const { plan, enableBilling } = useProviderContext()
   const isAppsFull = (enableBilling && plan.usage.buildApps >= plan.total.buildApps)
@@ -132,19 +132,17 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate }: CreateAppProps)
             </div>
             <div>
               <div className='mb-2 flex items-center'>
-                <button
-                  className='flex cursor-pointer items-center border-0 bg-transparent p-0'
-                  onClick={() => setIsAppTypeExpanded(!isAppTypeExpanded)}
+                <div
+                  className='flex items-center border-0 bg-transparent p-0'
                 >
                   <span className='system-2xs-medium-uppercase text-text-tertiary'>{t('app.newApp.forBeginners')}</span>
-                  <RiArrowRightSLine className={`ml-1 h-4 w-4 text-text-tertiary transition-transform ${isAppTypeExpanded ? 'rotate-90' : ''}`} />
-                </button>
+                  <RiArrowRightSLine className='ml-1 h-4 w-4 rotate-90 text-text-tertiary transition-transform' />
+                </div>
               </div>
-              {isAppTypeExpanded && (
-                <div className='flex flex-row gap-2'>
-                  <AppTypeCard
-                    active={appMode === 'chat'}
-                    title={t('app.types.chatbot')}
+              <div className='flex flex-row gap-2'>
+                <AppTypeCard
+                  active={appMode === 'chat'}
+                  title={t('app.types.chatbot')}
                     description={t('app.newApp.chatbotShortDescription')}
                     icon={<div className='flex h-6 w-6 items-center justify-center rounded-md bg-components-icon-bg-blue-solid'>
                       <ChatBot className='h-4 w-4 text-components-avatar-shape-fill-stop-100' />
@@ -172,8 +170,7 @@ function CreateApp({ onClose, onSuccess, onCreateFromTemplate }: CreateAppProps)
                     onClick={() => {
                       setAppMode('completion')
                     }} />
-                </div>
-              )}
+              </div>
             </div>
             <Divider style={{ margin: 0 }} />
             <div className='flex items-center space-x-3'>

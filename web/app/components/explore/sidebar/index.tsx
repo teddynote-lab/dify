@@ -6,11 +6,9 @@ import { useContext } from 'use-context-selector'
 import { useSelectedLayoutSegments } from 'next/navigation'
 import Link from 'next/link'
 import Toast from '../../base/toast'
-import Item from './app-nav-item'
 import cn from '@/utils/classnames'
 import ExploreContext from '@/context/explore-context'
 import Confirm from '@/app/components/base/confirm'
-import Divider from '@/app/components/base/divider'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import { useGetInstalledApps, useUninstallApp, useUpdateAppPinStatus } from '@/service/use-explore'
 
@@ -108,39 +106,6 @@ const SideBar: FC<IExploreSideBarProps> = ({
           {!isMobile && <div className='text-sm'>{t('explore.sidebar.discovery')}</div>}
         </Link>
       </div>
-      {installedApps.length > 0 && (
-        <div className='mt-10'>
-          <p className='break-all pl-2 text-xs font-medium uppercase text-text-tertiary mobile:px-0'>{t('explore.sidebar.workspace')}</p>
-          <div className='mt-3 space-y-1 overflow-y-auto overflow-x-hidden'
-            style={{
-              height: 'calc(100vh - 250px)',
-            }}
-          >
-            {installedApps.map(({ id, is_pinned, uninstallable, app: { name, icon_type, icon, icon_url, icon_background } }, index) => (
-              <React.Fragment key={id}>
-                <Item
-                  isMobile={isMobile}
-                  name={name}
-                  icon_type={icon_type}
-                  icon={icon}
-                  icon_background={icon_background}
-                  icon_url={icon_url}
-                  id={id}
-                  isSelected={lastSegment?.toLowerCase() === id}
-                  isPinned={is_pinned}
-                  togglePin={() => handleUpdatePinStatus(id, !is_pinned)}
-                  uninstallable={uninstallable}
-                  onDelete={(id) => {
-                    setCurrId(id)
-                    setShowConfirm(true)
-                  }}
-                />
-                {index === pinnedAppsCount - 1 && index !== installedApps.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      )}
       {showConfirm && (
         <Confirm
           title={t('explore.sidebar.delete.title')}
