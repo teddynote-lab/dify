@@ -98,32 +98,35 @@ const InviteModal = ({
 
         <div>
           <div className='mb-2 text-sm font-medium text-text-primary'>{t('common.members.email')}</div>
-          <div className='mb-8 flex h-36 flex-col items-stretch'>
-            <ReactMultiEmail
-              className={cn('w-full border-components-input-border-active !bg-components-input-bg-normal px-3 pt-2 outline-none',
-                'appearance-none overflow-y-auto rounded-lg text-sm !text-text-primary',
-              )}
-              autoFocus
-              emails={emails}
-              inputClassName='bg-transparent'
-              onChange={setEmails}
-              getLabel={(email, index, removeEmail) =>
-                <div data-tag key={index} className={cn('bg-components-button-secondary-bg')}>
-                  <div data-tag-item>{email}</div>
-                  <span data-tag-handle onClick={() => removeEmail(index)}>
-                    ×
-                  </span>
-                </div>
-              }
-              placeholder={t('common.members.emailPlaceholder') || ''}
-            />
-            <div className={
-              cn('system-xs-regular flex items-center justify-end text-text-tertiary',
-                (isLimited && usedSize > licenseLimit.workspace_members.limit) ? 'text-text-destructive' : '')}
-            >
-              <span>{usedSize}</span>
-              <span>/</span>
-              <span>{isLimited ? licenseLimit.workspace_members.limit : t('common.license.unlimited')}</span>
+          <div className='mb-8'>
+            <div className='relative h-36 overflow-hidden rounded-lg border border-components-input-border-active bg-components-input-bg-normal'>
+              <ReactMultiEmail
+                className={cn('w-full px-3 pb-8 pt-2 outline-none',
+                  'h-full appearance-none overflow-y-auto text-sm !text-text-primary',
+                )}
+                autoFocus
+                emails={emails}
+                inputClassName='bg-transparent'
+                onChange={setEmails}
+                getLabel={(email, index, removeEmail) =>
+                  <div data-tag key={index} className={cn('bg-components-button-secondary-bg')}>
+                    <div data-tag-item>{email}</div>
+                    <span data-tag-handle onClick={() => removeEmail(index)}>
+                      ×
+                    </span>
+                  </div>
+                }
+                placeholder={t('common.members.emailPlaceholder') || ''}
+              />
+              <div className={
+                cn('border-components-input-border absolute bottom-0 left-0 right-0 border-t bg-components-input-bg-normal px-3 py-1',
+                  'system-xs-regular flex items-center justify-end text-text-tertiary',
+                  (isLimited && usedSize > licenseLimit.workspace_members.limit) ? 'text-text-destructive' : '')}
+              >
+                <span>{usedSize}</span>
+                <span>/</span>
+                <span>{isLimited ? licenseLimit.workspace_members.limit : t('common.license.unlimited')}</span>
+              </div>
             </div>
           </div>
           <div className='mb-6'>
