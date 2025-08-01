@@ -299,12 +299,12 @@ def create_default_email_config() -> EmailI18nConfig:
         },
         EmailType.INVITE_MEMBER: {
             EmailLanguage.EN_US: EmailTemplate(
-                subject="Join {application_title} Workspace Now",
+                subject="[HSAD] DASH Flow 전용 커스텀 Dify 에 초대드립니다.",
                 template_path="invite_member_mail_template_en-US.html",
                 branded_template_path="without-brand/invite_member_mail_template_en-US.html",
             ),
             EmailLanguage.ZH_HANS: EmailTemplate(
-                subject="立即加入 {application_title} 工作空间",
+                subject="[HSAD] DASH Flow 전용 커스텀 Dify 에 초대드립니다.",
                 template_path="invite_member_mail_template_zh-CN.html",
                 branded_template_path="without-brand/invite_member_mail_template_zh-CN.html",
             ),
