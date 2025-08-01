@@ -15,29 +15,20 @@ build-api:
 	docker build -t $(API_IMAGE):$(VERSION) ./api
 	@echo "API Docker image built successfully: $(API_IMAGE):$(VERSION)"
 
-# Push Docker images
-push-web:
-	@echo "Pushing web Docker image: $(WEB_IMAGE):$(VERSION)..."
-	docker push $(WEB_IMAGE):$(VERSION)
-	@echo "Web Docker image pushed successfully: $(WEB_IMAGE):$(VERSION)"
-
-push-api:
-	@echo "Pushing API Docker image: $(API_IMAGE):$(VERSION)..."
-	docker push $(API_IMAGE):$(VERSION)
-	@echo "API Docker image pushed successfully: $(API_IMAGE):$(VERSION)"
-
 # Build all images
-build-all: build-web build-api
+build: build-web build-api
 
-# Push all images
-push-all: push-web push-api
+# Start services
+up:
+	@echo "Starting Dify services..."
+	cd docker && docker compose up -d
+	@echo "Dify services started successfully"
 
-build-push-api: build-api push-api
-build-push-web: build-web push-web
-
-# Build and push all images
-build-push-all: build-all push-all
-	@echo "All Docker images have been built and pushed."
+# Stop services
+down:
+	@echo "Stopping Dify services..."
+	cd docker && docker compose down
+	@echo "Dify services stopped successfully"
 
 # Phony targets
-.PHONY: build-web build-api push-web push-api build-all push-all build-push-all
+.PHONY: build-web build-api build-all up down
