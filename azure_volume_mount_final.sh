@@ -38,7 +38,7 @@ check_root() {
 
 # Function to find 1TB unmounted disk
 find_target_disk() {
-    print_message $YELLOW "Searching for 1TB unmounted disk..."
+    print_message $YELLOW "Searching for 1TB unmounted disk..." >&2
     
     # Find disks around 1TB size
     for disk in $(lsblk -rno NAME,TYPE,SIZE | grep disk | awk '$3~/^(9[0-9]{2}G|1\.?[0-9]?T)$/ {print $1}'); do
@@ -47,33 +47,33 @@ find_target_disk() {
             if ! mount | grep -q "/dev/${disk}"; then
                 TARGET_DISK="/dev/${disk}"
                 local size=$(lsblk -rno SIZE "/dev/${disk}" | head -1)
-                print_message $GREEN "Found unmounted disk: ${TARGET_DISK} (${size})"
+                print_message $GREEN "Found unmounted disk: ${TARGET_DISK} (${size})" >&2
                 return 0
             fi
         fi
     done
     
-    print_message $RED "No suitable 1TB unmounted disk found!"
-    print_message $YELLOW "Available disks:"
-    lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
+    print_message $RED "No suitable 1TB unmounted disk found!" >&2
+    print_message $YELLOW "Available disks:" >&2
+    lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT >&2
     exit 1
 }
 
 # Function to create partition and filesystem
 prepare_disk() {
     local disk=$1
-    print_message $YELLOW "Preparing disk ${disk}..."
+    print_message $YELLOW "Preparing disk ${disk}..." >&2
     
     # Create partition table
-    print_message $GREEN "Creating GPT partition table..."
+    print_message $GREEN "Creating GPT partition table..." >&2
     parted -s ${disk} mklabel gpt || {
-        print_message $RED "Failed to create partition table"
+        print_message $RED "Failed to create partition table" >&2
         exit 1
     }
     
-    print_message $GREEN "Creating primary partition..."
+    print_message $GREEN "Creating primary partition..." >&2
     parted -s ${disk} mkpart primary ext4 0% 100% || {
-        print_message $RED "Failed to create partition"
+        print_message $RED "Failed to create partition" >&2
         exit 1
     }
     
@@ -88,14 +88,14 @@ prepare_disk() {
     
     # Verify partition exists
     if [[ ! -b ${partition} ]]; then
-        print_message $RED "Partition ${partition} was not created!"
+        print_message $RED "Partition ${partition} was not created!" >&2
         exit 1
     fi
     
     # Create filesystem
-    print_message $GREEN "Creating ext4 filesystem on ${partition}..."
-    mkfs.ext4 -F ${partition} || {
-        print_message $RED "Failed to create filesystem"
+    print_message $GREEN "Creating ext4 filesystem on ${partition}..." >&2
+    mkfs.ext4 -F ${partition} >&2 || {
+        print_message $RED "Failed to create filesystem" >&2
         exit 1
     }
     
@@ -106,14 +106,14 @@ prepare_disk() {
 mount_disk() {
     local partition=$1
     
-    print_message $YELLOW "Mounting disk..."
+    print_message $YELLOW "Mounting disk..." >&2
     
     # Create mount point
     mkdir -p ${MOUNT_POINT}
     
     # Mount the partition
     mount ${partition} ${MOUNT_POINT} || {
-        print_message $RED "Failed to mount partition"
+        print_message $RED "Failed to mount partition ${partition}" >&2
         exit 1
     }
     
@@ -121,12 +121,12 @@ mount_disk() {
     local uuid=$(blkid -s UUID -o value ${partition})
     
     if [[ -z "${uuid}" ]]; then
-        print_message $RED "Failed to get UUID for partition"
+        print_message $RED "Failed to get UUID for partition" >&2
         exit 1
     fi
     
     # Add to fstab for persistent mount
-    print_message $GREEN "Adding to /etc/fstab for persistent mount..."
+    print_message $GREEN "Adding to /etc/fstab for persistent mount..." >&2
     # Remove any existing entry for this mount point
     sed -i "\|${MOUNT_POINT}|d" /etc/fstab
     echo "UUID=${uuid} ${MOUNT_POINT} ext4 defaults,nofail 0 2" >> /etc/fstab
@@ -134,8 +134,8 @@ mount_disk() {
     # Set permissions
     chmod 755 ${MOUNT_POINT}
     
-    print_message $GREEN "Disk mounted successfully at ${MOUNT_POINT}"
-    df -h ${MOUNT_POINT}
+    print_message $GREEN "Disk mounted successfully at ${MOUNT_POINT}" >&2
+    df -h ${MOUNT_POINT} >&2
 }
 
 # Function to stop Docker services
