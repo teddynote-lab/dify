@@ -42,9 +42,18 @@ find_target_disk() {
     
     # Find disks around 1TB size
     for disk in $(lsblk -rno NAME,TYPE,SIZE | grep disk | awk '$3~/^(9[0-9]{2}G|1\.?[0-9]?T)$/ {print $1}'); do
-        # Check if disk has no partitions and is not mounted
-        if ! lsblk -rno NAME "/dev/${disk}" | grep -q "^${disk}[0-9]"; then
-            if ! mount | grep -q "/dev/${disk}"; then
+        # Check if disk is not mounted (regardless of partitions)
+        if ! mount | grep -q "/dev/${disk}"; then
+            # Check if any partitions of this disk are mounted
+            local disk_mounted=false
+            for part in $(lsblk -rno NAME "/dev/${disk}" | grep -E "^${disk}[0-9]|^${disk}p[0-9]"); do
+                if mount | grep -q "/dev/${part}"; then
+                    disk_mounted=true
+                    break
+                fi
+            done
+            
+            if ! $disk_mounted; then
                 TARGET_DISK="/dev/${disk}"
                 local size=$(lsblk -rno SIZE "/dev/${disk}" | head -1)
                 print_message $GREEN "Found unmounted disk: ${TARGET_DISK} (${size})" >&2
@@ -59,10 +68,76 @@ find_target_disk() {
     exit 1
 }
 
+# Function to check if disk has partitions
+check_disk_partitions() {
+    local disk=$1
+    
+    # Check for existing partitions
+    if lsblk -rno NAME "${disk}" | grep -qE "^$(basename ${disk})[0-9]|^$(basename ${disk})p[0-9]"; then
+        return 0  # Has partitions
+    else
+        return 1  # No partitions
+    fi
+}
+
+# Function to get first partition of a disk
+get_first_partition() {
+    local disk=$1
+    local partition=""
+    
+    # Try standard partition naming
+    if [[ -b "${disk}1" ]]; then
+        partition="${disk}1"
+    # Try NVMe partition naming
+    elif [[ -b "${disk}p1" ]]; then
+        partition="${disk}p1"
+    else
+        # Find first partition using lsblk
+        partition="/dev/$(lsblk -rno NAME "${disk}" | grep -E "^$(basename ${disk})[0-9]|^$(basename ${disk})p[0-9]" | head -1)"
+    fi
+    
+    if [[ -b "${partition}" ]]; then
+        echo ${partition}
+    else
+        return 1
+    fi
+}
+
 # Function to create partition and filesystem
 prepare_disk() {
     local disk=$1
-    print_message $YELLOW "Preparing disk ${disk}..." >&2
+    
+    # Check if disk already has partitions
+    if check_disk_partitions ${disk}; then
+        print_message $YELLOW "Disk ${disk} already has partitions" >&2
+        
+        # Get the first partition
+        local partition=$(get_first_partition ${disk})
+        if [[ -z "${partition}" ]]; then
+            print_message $RED "Could not find partition on ${disk}" >&2
+            exit 1
+        fi
+        
+        print_message $GREEN "Found existing partition: ${partition}" >&2
+        
+        # Check if partition has a filesystem
+        local fstype=$(lsblk -rno FSTYPE ${partition} | head -1)
+        if [[ -z "${fstype}" ]]; then
+            print_message $YELLOW "No filesystem found on ${partition}, creating ext4..." >&2
+            mkfs.ext4 -F ${partition} >&2 || {
+                print_message $RED "Failed to create filesystem" >&2
+                exit 1
+            }
+        else
+            print_message $GREEN "Existing filesystem found: ${fstype}" >&2
+        fi
+        
+        echo ${partition}
+        return 0
+    fi
+    
+    # No partitions found, create new ones
+    print_message $YELLOW "No partitions found on ${disk}, creating new partition..." >&2
     
     # Create partition table
     print_message $GREEN "Creating GPT partition table..." >&2
@@ -321,8 +396,14 @@ main() {
     # Find target disk automatically
     find_target_disk
     
+    # Check if disk already has partitions
+    local action_text="Format"
+    if check_disk_partitions ${TARGET_DISK}; then
+        action_text="Use existing partition on"
+    fi
+    
     print_message $YELLOW "\nThis script will:"
-    print_message $YELLOW "1. Format disk ${TARGET_DISK}"
+    print_message $YELLOW "1. ${action_text} disk ${TARGET_DISK}"
     print_message $YELLOW "2. Mount it at ${MOUNT_POINT}"
     print_message $YELLOW "3. Stop Dify Docker services"
     print_message $YELLOW "4. Migrate volumes to new storage"
