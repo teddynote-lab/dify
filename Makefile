@@ -6,14 +6,14 @@ VERSION=latest
 
 # Build Docker images
 build-web:
-	@echo "Building web Docker image: $(WEB_IMAGE):$(VERSION)..."
-	docker build -t $(WEB_IMAGE):$(VERSION) ./web
-	@echo "Web Docker image built successfully: $(WEB_IMAGE):$(VERSION)"
+	@echo "Building web Docker image with no-cache..."
+	cd docker && docker compose build --no-cache web
+	@echo "Web Docker image built successfully"
 
 build-api:
-	@echo "Building API Docker image: $(API_IMAGE):$(VERSION)..."
-	docker build -t $(API_IMAGE):$(VERSION) ./api
-	@echo "API Docker image built successfully: $(API_IMAGE):$(VERSION)"
+	@echo "Building API Docker image with no-cache..."
+	cd docker && docker compose build --no-cache api worker worker_beat
+	@echo "API Docker image built successfully"
 
 # Build all images
 build: build-web build-api
