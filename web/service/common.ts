@@ -397,3 +397,7 @@ export const resetEmail = (body: { new_email: string; token: string }) =>
 
 export const checkEmailExisted = (body: { email: string }) =>
   post<CommonResponse>('/account/change-email/check-email-unique', { body }, { silent: true })
+
+export const resetMemberPassword: Fetcher<CommonResponse, { url: string; body: { password: string } }> = ({ url, body }) => {
+  return post<CommonResponse>(url, { body })
+}

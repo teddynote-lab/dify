@@ -1,3 +1,5 @@
+import base64
+import secrets
 from urllib import parse
 
 from flask import request
@@ -27,6 +29,7 @@ from extensions.ext_database import db
 from fields.member_fields import account_with_role_list_fields
 from libs.helper import extract_remote_ip
 from libs.login import login_required
+from libs.password import hash_password
 from models.account import Account, TenantAccountRole
 from services.account_service import AccountService, RegisterService, TenantService
 from services.errors.account import AccountAlreadyInTenantError
@@ -302,10 +305,75 @@ class OwnerTransfer(Resource):
         return {"result": "success"}
 
 
+class MemberResetPasswordApi(Resource):
+    """Reset member password."""
+
+    @setup_required
+    @login_required
+    @account_initialization_required
+    def post(self, member_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument("password", type=str, required=True, location="json")
+        parser.add_argument("send_email", type=bool, required=False, default=False, location="json")
+        args = parser.parse_args()
+        
+        # Check if current user is owner or admin
+        if not TenantService.is_owner(current_user, current_user.current_tenant):
+            if not TenantService.is_admin(current_user, current_user.current_tenant):
+                return {"code": "forbidden", "message": "No permission"}, 403
+        
+        member = db.session.get(Account, str(member_id))
+        if not member:
+            abort(404)
+        
+        # Check if member is in the current tenant
+        if not TenantService.is_member(member, current_user.current_tenant):
+            return {"code": "member-not-found", "message": "Member not in tenant"}, 404
+        
+        try:
+            # If member is pending (not activated), activate them first
+            if member.status == 'pending':
+                # Activate the member
+                member.status = 'active'
+                member.initialized_at = db.func.now()
+            
+            # Set the new password with salt
+            salt = secrets.token_bytes(16)
+            password_hashed = hash_password(args["password"], salt)
+            base64_salt = base64.b64encode(salt).decode()
+            base64_password_hashed = base64.b64encode(password_hashed).decode()
+            
+            member.password = base64_password_hashed
+            member.password_salt = base64_salt
+            member.password_updated_at = db.func.now()
+            
+            db.session.commit()
+            
+            # Send email if requested
+            if args.get("send_email") and member.email:
+                from tasks.mail_force_password_reset_task import send_force_password_reset_mail_task
+                
+                # Determine language from member's interface language or default to en-US
+                language = member.interface_language if hasattr(member, 'interface_language') else 'en-US'
+                send_force_password_reset_mail_task.delay(
+                    language=language,
+                    to=member.email,
+                    new_password=args["password"]
+                )
+                
+                return {"result": "success", "message": "Password reset successfully and email sent"}
+            
+            return {"result": "success", "message": "Password reset successfully"}
+        except Exception as e:
+            db.session.rollback()
+            return {"code": "error", "message": str(e)}, 500
+
+
 api.add_resource(MemberListApi, "/workspaces/current/members")
 api.add_resource(MemberInviteEmailApi, "/workspaces/current/members/invite-email")
 api.add_resource(MemberCancelInviteApi, "/workspaces/current/members/<uuid:member_id>")
 api.add_resource(MemberUpdateRoleApi, "/workspaces/current/members/<uuid:member_id>/update-role")
+api.add_resource(MemberResetPasswordApi, "/workspaces/current/members/<uuid:member_id>/reset-password")
 api.add_resource(DatasetOperatorMemberListApi, "/workspaces/current/dataset-operators")
 # owner transfer
 api.add_resource(SendOwnerTransferEmailApi, "/workspaces/current/members/send-owner-transfer-confirm-email")

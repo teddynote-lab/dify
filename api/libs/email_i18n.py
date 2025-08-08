@@ -34,6 +34,7 @@ class EmailType(Enum):
     ENTERPRISE_CUSTOM = "enterprise_custom"
     QUEUE_MONITOR_ALERT = "queue_monitor_alert"
     DOCUMENT_CLEAN_NOTIFY = "document_clean_notify"
+    FORCE_PASSWORD_RESET = "force_password_reset"
 
 
 class EmailLanguage(Enum):
@@ -439,6 +440,18 @@ def create_default_email_config() -> EmailI18nConfig:
                 subject="Dify 知识库自动禁用通知",
                 template_path="clean_document_job_mail_template_zh-CN.html",
                 branded_template_path="clean_document_job_mail_template_zh-CN.html",
+            ),
+        },
+        EmailType.FORCE_PASSWORD_RESET: {
+            EmailLanguage.EN_US: EmailTemplate(
+                subject="Your {application_title} Password Has Been Reset",
+                template_path="force_password_reset_member_mail_template_en-US.html",
+                branded_template_path="force_password_reset_member_mail_template_en-US.html",
+            ),
+            EmailLanguage.ZH_HANS: EmailTemplate(
+                subject="您的 {application_title} 密码已被重置",
+                template_path="force_password_reset_member_mail_template_zh-CN.html",
+                branded_template_path="force_password_reset_member_mail_template_zh-CN.html",
             ),
         },
     }
