@@ -35,7 +35,7 @@ import type { AppDetailResponse } from '@/models/app'
 import { useAppContext } from '@/context/app-context'
 import type { AppSSO } from '@/types/app'
 import Indicator from '@/app/components/header/indicator'
-import { fetchAppDetailDirect } from '@/service/apps'
+import { fetchAppDetail } from '@/service/apps'
 import { AccessMode } from '@/models/access-control'
 import AccessControl from '../app-access-control'
 import { useAppWhiteListSubjects } from '@/service/access-control'
@@ -163,7 +163,7 @@ function AppCard({
   }, [appDetail])
   const handleAccessControlUpdate = useCallback(async () => {
     try {
-      const res = await fetchAppDetailDirect({ url: '/apps', id: appDetail!.id })
+      const res = await fetchAppDetail({ url: '/apps', id: appDetail!.id })
       setAppDetail(res)
       setShowAccessControl(false)
     }
