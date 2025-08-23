@@ -151,3 +151,13 @@ export const useDocumentResume = () => {
     },
   })
 }
+
+export const useDocumentDownload = () => {
+  return useMutation({
+    mutationFn: ({ datasetId, documentId }: UpdateDocumentBatchParams) => {
+      if (!datasetId || !documentId)
+        throw new Error('datasetId and documentId are required')
+      return get<{ download_url: string }>(`/datasets/${datasetId}/documents/${documentId}/download`)
+    },
+  })
+}
