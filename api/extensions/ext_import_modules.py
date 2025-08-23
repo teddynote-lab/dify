@@ -10,7 +10,7 @@ def init_app(app: DifyApp):
         mail_account_deletion_task,
         mail_change_mail_task,
         mail_email_code_login,
-        mail_enterprise_task,
+        mail_inner_task,
         mail_force_password_reset_task,
         mail_invite_member_task,
         mail_owner_transfer_task,
