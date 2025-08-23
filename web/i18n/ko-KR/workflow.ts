@@ -118,6 +118,8 @@ const translation = {
     needAnswerNode: '답변 노드를 추가해야 합니다.',
     needEndNode: '종단 노드를 추가해야 합니다.',
     tagBound: '이 태그를 사용하는 앱 수',
+    currentView: '현재 보기',
+    currentWorkflow: '현재 워크플로',
   },
   env: {
     envPanelTitle: '환경 변수',
@@ -308,6 +310,18 @@ const translation = {
     zoomTo50: '50% 로 확대',
     zoomTo100: '100% 로 확대',
     zoomToFit: '화면에 맞게 확대',
+    alignCenter: '중앙',
+    alignRight: '오른쪽',
+    alignLeft: '왼쪽',
+    vertical: '세로',
+    alignTop: '상단',
+    alignMiddle: '중간',
+    alignNodes: '노드 정렬',
+    distributeVertical: '수직 등간격',
+    horizontal: '가로',
+    selectionAlignment: '선택 정렬',
+    alignBottom: '하단',
+    distributeHorizontal: '수평 등간격',
   },
   panel: {
     userInputField: '사용자 입력 필드',
@@ -844,7 +858,7 @@ const translation = {
           '에이전트 전략을 구성한 후 이 노드는 나머지 구성을 자동으로 로드합니다. 이 전략은 다단계 도구 추론의 메커니즘에 영향을 미칩니다.',
       },
       pluginInstaller: {
-        install: '설치',
+        install: '설치하다',
         installing: '설치',
       },
       modelNotInMarketplace: {
@@ -871,13 +885,14 @@ const translation = {
         },
         json: '에이전트 생성 JSON',
         text: '상담원이 생성한 콘텐츠',
+        usage: '모델 사용 정보',
       },
       checkList: {
         strategyNotSelected: '전략이 선택되지 않음',
       },
       installPlugin: {
         changelog: '변경 로그',
-        install: '설치',
+        install: '설치하다',
         desc: '다음 플러그인을 설치하려고 합니다.',
         cancel: '취소',
         title: '플러그인 설치',
@@ -977,6 +992,7 @@ const translation = {
       restoreFailure: '버전을 복원하지 못했습니다.',
       deleteFailure: '버전을 삭제하지 못했습니다.',
       updateSuccess: '버전이 업데이트되었습니다.',
+      copyIdSuccess: '클립보드에 복사된 ID',
     },
     editVersionInfo: '버전 정보 편집',
     latest: '최신',
@@ -987,6 +1003,7 @@ const translation = {
     title: '버전 기록',
     deletionTip: '삭제는 되돌릴 수 없으니, 확인해 주시기 바랍니다.',
     restorationTip: '버전 복원 후 현재 초안이 덮어쓰여질 것입니다.',
+    copyId: 'ID 복사',
   },
   debug: {
     noData: {
@@ -1017,6 +1034,20 @@ const translation = {
     },
     settingsTab: '설정',
     lastRunTab: '마지막 실행',
+    relations: {
+      dependencies: '종속성',
+      dependentsDescription: '이 노드에 의존하는 노드',
+      noDependents: '부양가족 없음',
+      noDependencies: '종속성 없음',
+      dependents: '부양 가족',
+      dependenciesDescription: '이 노드가 의존하는 노드',
+    },
+    relationsTab: '관계',
+    copyLastRun: '마지막 실행 복사',
+    noLastRunFound: '이전 실행이 없습니다.',
+    noMatchingInputsFound: '지난 실행에서 일치하는 입력을 찾을 수 없습니다.',
+    copyLastRunError: '마지막 실행 입력을 복사하는 데 실패했습니다.',
+    lastOutput: '마지막 출력',
   },
 }
 

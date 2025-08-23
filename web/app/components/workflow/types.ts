@@ -294,6 +294,7 @@ export type NodeOutPutVar = {
   vars: Var[]
   isStartNode?: boolean
   isLoop?: boolean
+  isFlat?: boolean
 }
 
 export type Block = {
@@ -447,6 +448,6 @@ export enum VersionHistoryContextMenuOptions {
   delete = 'delete',
 }
 
-export interface ChildNodeTypeCount {
+export type ChildNodeTypeCount = {
   [key: string]: number;
 }

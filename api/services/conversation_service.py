@@ -1,3 +1,4 @@
+import contextlib
 from collections.abc import Callable, Sequence
 from typing import Optional, Union
 
@@ -95,10 +96,10 @@ class ConversationService:
     @classmethod
     def _build_filter_condition(cls, sort_field: str, sort_direction: Callable, reference_conversation: Conversation):
         field_value = getattr(reference_conversation, sort_field)
-        if sort_direction == desc:
+        if sort_direction is desc:
             return getattr(Conversation, sort_field) < field_value
-        else:
-            return getattr(Conversation, sort_field) > field_value
+
+        return getattr(Conversation, sort_field) > field_value
 
     @classmethod
     def rename(
@@ -134,13 +135,11 @@ class ConversationService:
             raise MessageNotExistsError()
 
         # generate conversation name
-        try:
+        with contextlib.suppress(Exception):
             name = LLMGenerator.generate_conversation_name(
                 app_model.tenant_id, message.query, conversation.id, app_model.id
             )
             conversation.name = name
-        except:
-            pass
 
         db.session.commit()
 
