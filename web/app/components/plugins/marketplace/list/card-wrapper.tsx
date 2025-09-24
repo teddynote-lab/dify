@@ -11,6 +11,8 @@ import InstallFromMarketplace from '@/app/components/plugins/install-plugin/inst
 import { useBoolean } from 'ahooks'
 import { useI18N } from '@/context/i18n'
 import { useTags } from '@/app/components/plugins/hooks'
+import { useAppContext } from '@/context/app-context'
+import PermissionDeniedModal from '../permission-denied-modal'
 
 type CardWrapperProps = {
   plugin: Plugin
@@ -24,12 +26,24 @@ const CardWrapper = ({
 }: CardWrapperProps) => {
   const { t } = useMixedTranslation(locale)
   const { theme } = useTheme()
+  const { isCurrentWorkspaceManager } = useAppContext()
   const [isShowInstallFromMarketplace, {
     setTrue: showInstallFromMarketplace,
     setFalse: hideInstallFromMarketplace,
   }] = useBoolean(false)
+  const [isShowPermissionDenied, {
+    setTrue: showPermissionDenied,
+    setFalse: hidePermissionDenied,
+  }] = useBoolean(false)
   const { locale: localeFromLocale } = useI18N()
   const { tagsMap } = useTags(t)
+
+  const handleInstallClick = () => {
+    if (isCurrentWorkspaceManager)
+      showInstallFromMarketplace()
+     else
+      showPermissionDenied()
+  }
 
   if (showInstallButton) {
     return (
@@ -52,7 +66,7 @@ const CardWrapper = ({
             <Button
               variant='primary'
               className='w-[calc(50%-4px)]'
-              onClick={showInstallFromMarketplace}
+              onClick={handleInstallClick}
             >
               {t('plugin.detailPanel.operation.install')}
             </Button>
@@ -73,6 +87,14 @@ const CardWrapper = ({
               uniqueIdentifier={plugin.latest_package_identifier}
               onClose={hideInstallFromMarketplace}
               onSuccess={hideInstallFromMarketplace}
+            />
+          )
+        }
+        {
+          isShowPermissionDenied && (
+            <PermissionDeniedModal
+              isShow={isShowPermissionDenied}
+              onClose={hidePermissionDenied}
             />
           )
         }

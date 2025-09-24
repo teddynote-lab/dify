@@ -12,11 +12,13 @@ import Title from './card/base/title'
 import DownloadCount from './card/base/download-count'
 import Button from '@/app/components/base/button'
 import InstallFromMarketplace from '@/app/components/plugins/install-plugin/install-from-marketplace'
+import PermissionDeniedModal from '@/app/components/plugins/marketplace/permission-denied-modal'
 import cn from '@/utils/classnames'
 import { useBoolean } from 'ahooks'
 import { getPluginLinkInMarketplace } from '@/app/components/plugins/marketplace/utils'
 import { useI18N } from '@/context/i18n'
 import { useRenderI18nObject } from '@/hooks/use-i18n'
+import { useAppContext } from '@/context/app-context'
 
 type Props = {
   className?: string
@@ -30,9 +32,14 @@ const ProviderCard: FC<Props> = ({
   const getValueFromI18nObject = useRenderI18nObject()
   const { t } = useTranslation()
   const { theme } = useTheme()
+  const { isCurrentWorkspaceManager } = useAppContext()
   const [isShowInstallFromMarketplace, {
     setTrue: showInstallFromMarketplace,
     setFalse: hideInstallFromMarketplace,
+  }] = useBoolean(false)
+  const [isShowPermissionDenied, {
+    setTrue: showPermissionDenied,
+    setFalse: hidePermissionDenied,
   }] = useBoolean(false)
   const { org, label } = payload
   const { locale } = useI18N()
@@ -68,7 +75,12 @@ const ProviderCard: FC<Props> = ({
         <Button
           className='grow'
           variant='primary'
-          onClick={showInstallFromMarketplace}
+          onClick={() => {
+            if (isCurrentWorkspaceManager)
+              showInstallFromMarketplace()
+             else
+              showPermissionDenied()
+          }}
         >
           {t('plugin.detailPanel.operation.install')}
         </Button>
@@ -89,6 +101,14 @@ const ProviderCard: FC<Props> = ({
             uniqueIdentifier={payload.latest_package_identifier}
             onClose={hideInstallFromMarketplace}
             onSuccess={() => hideInstallFromMarketplace()}
+          />
+        )
+      }
+      {
+        isShowPermissionDenied && (
+          <PermissionDeniedModal
+            isShow={isShowPermissionDenied}
+            onClose={hidePermissionDenied}
           />
         )
       }

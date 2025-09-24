@@ -26,6 +26,7 @@ import Tooltip from '@/app/components/base/tooltip'
 import cn from '@/utils/classnames'
 import ReferenceSettingModal from '@/app/components/plugins/reference-setting-modal/modal'
 import InstallFromMarketplace from '../install-plugin/install-from-marketplace'
+import PermissionDeniedModal from '../marketplace/permission-denied-modal'
 import {
   useRouter,
   useSearchParams,
@@ -87,6 +88,10 @@ const PluginPage = ({
     setTrue: showInstallFromMarketplace,
     setFalse: doHideInstallFromMarketplace,
   }] = useBoolean(false)
+  const [isShowPermissionDenied, {
+    setTrue: showPermissionDenied,
+    setFalse: hidePermissionDenied,
+  }] = useBoolean(false)
 
   const hideInstallFromMarketplace = () => {
     doHideInstallFromMarketplace()
@@ -96,6 +101,13 @@ const PluginPage = ({
     replace(url.toString())
   }
   const [manifest, setManifest] = useState<PluginDeclaration | PluginManifestInMarket | null>(null)
+  const {
+    referenceSetting,
+    canManagement,
+    canDebugger,
+    canSetPermissions,
+    setReferenceSettings,
+  } = useReferenceSetting()
 
   useEffect(() => {
     (async () => {
@@ -108,24 +120,23 @@ const PluginPage = ({
           version: version.version,
           icon: `${MARKETPLACE_API_PREFIX}/plugins/${plugin.org}/${plugin.name}/icon`,
         })
-        showInstallFromMarketplace()
+        if (canManagement)
+          showInstallFromMarketplace()
+         else
+          showPermissionDenied()
+
         return
       }
       if (bundleInfo) {
         const { data } = await fetchBundleInfoFromMarketPlace(bundleInfo)
         setDependencies(data.version.dependencies)
-        showInstallFromMarketplace()
+        if (canManagement)
+          showInstallFromMarketplace()
+         else
+          showPermissionDenied()
       }
     })()
-  }, [packageId, bundleInfo])
-
-  const {
-    referenceSetting,
-    canManagement,
-    canDebugger,
-    canSetPermissions,
-    setReferenceSettings,
-  } = useReferenceSetting()
+  }, [packageId, bundleInfo, canManagement])
   const [showPluginSettingModal, {
     setTrue: setShowPluginSettingModal,
     setFalse: setHidePluginSettingModal,
@@ -291,6 +302,14 @@ const PluginPage = ({
             dependencies={dependencies}
             onClose={hideInstallFromMarketplace}
             onSuccess={hideInstallFromMarketplace}
+          />
+        )
+      }
+      {
+        isShowPermissionDenied && (
+          <PermissionDeniedModal
+            isShow={isShowPermissionDenied}
+            onClose={hidePermissionDenied}
           />
         )
       }

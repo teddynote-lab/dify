@@ -28,6 +28,11 @@ const translation = {
     marketplace: '마켓',
     github: '깃허브',
   },
+  permission: {
+    title: '권한 필요',
+    description: '보안상의 이유로 플러그인 설치가 제한되어 있습니다. 관리자와 소유자만 플러그인을 설치할 수 있습니다.',
+    contact: '이 플러그인을 설치하려면 워크스페이스 관리자에게 문의하세요.',
+  },
   detailPanel: {
     categoryTip: {
       marketplace: '마켓플레이스에서 설치됨',
