@@ -46,6 +46,11 @@ const translation = {
     github: 'GitHub',
     local: 'Local Package File',
   },
+  permission: {
+    title: 'Permission Required',
+    description: 'Plugin installation is restricted for security reasons. Only administrators and owners can install plugins.',
+    contact: 'Please contact your workspace administrator to install this plugin.',
+  },
   detailPanel: {
     switchVersion: 'Switch Version',
     categoryTip: {

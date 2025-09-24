@@ -28,7 +28,7 @@ def send_force_password_reset_mail_task(language: str, to: str, new_password: st
     try:
         # Get console web URL from config
         console_web_url = dify_config.CONSOLE_WEB_URL or "https://dify.ai"
-        
+
         email_service = get_email_i18n_service()
         email_service.send_email(
             email_type=EmailType.FORCE_PASSWORD_RESET,

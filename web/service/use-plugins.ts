@@ -505,7 +505,7 @@ export const usePluginTaskList = (category?: PluginType) => {
     queryFn: () => get<{ tasks: PluginTask[] }>('/workspaces/current/plugin/tasks?page=1&page_size=100'),
     refetchInterval: (lastQuery) => {
       const lastData = lastQuery.state.data
-      const taskDone = lastData?.tasks.every(task => task.status === TaskStatus.success || task.status === TaskStatus.failed)
+      const taskDone = lastData?.tasks?.every(task => task.status === TaskStatus.success || task.status === TaskStatus.failed)
       return taskDone ? false : 5000
     },
   })
@@ -514,8 +514,8 @@ export const usePluginTaskList = (category?: PluginType) => {
     // After first fetch, refresh plugin list each time all tasks are done
     if (!isRefetching) {
       const lastData = cloneDeep(data)
-      const taskDone = lastData?.tasks.every(task => task.status === TaskStatus.success || task.status === TaskStatus.failed)
-      const taskAllFailed = lastData?.tasks.every(task => task.status === TaskStatus.failed)
+      const taskDone = lastData?.tasks?.every(task => task.status === TaskStatus.success || task.status === TaskStatus.failed)
+      const taskAllFailed = lastData?.tasks?.every(task => task.status === TaskStatus.failed)
       if (taskDone) {
         if (lastData?.tasks.length && !taskAllFailed)
           refreshPluginList(category ? { category } as any : undefined, !category)

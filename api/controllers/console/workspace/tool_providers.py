@@ -7,7 +7,6 @@ from flask_restx import (
     Resource,
     reqparse,
 )
-from werkzeug.exceptions import Forbidden
 
 from configs import dify_config
 from controllers.console import api
@@ -107,7 +106,7 @@ class ToolBuiltinProviderDeleteApi(Resource):
     def post(self, provider):
         user = current_user
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         tenant_id = user.current_tenant_id
         req = reqparse.RequestParser()
@@ -127,6 +126,9 @@ class ToolBuiltinProviderAddApi(Resource):
     @account_initialization_required
     def post(self, provider):
         user = current_user
+
+        if not user.is_admin_or_owner:
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -158,7 +160,7 @@ class ToolBuiltinProviderUpdateApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -212,7 +214,7 @@ class ToolApiProviderAddApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -299,7 +301,7 @@ class ToolApiProviderUpdateApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -340,7 +342,7 @@ class ToolApiProviderDeleteApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -447,7 +449,7 @@ class ToolWorkflowProviderCreateApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -486,7 +488,7 @@ class ToolWorkflowProviderUpdateApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -528,7 +530,7 @@ class ToolWorkflowProviderDeleteApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         user_id = user.id
         tenant_id = user.current_tenant_id
@@ -685,7 +687,7 @@ class ToolPluginOAuthApi(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         tenant_id = user.current_tenant_id
         oauth_client_params = BuiltinToolManageService.get_oauth_client(tenant_id=tenant_id, provider=provider)
@@ -792,7 +794,7 @@ class ToolOAuthCustomClient(Resource):
         user = current_user
 
         if not user.is_admin_or_owner:
-            raise Forbidden()
+            return {"success": True}
 
         return BuiltinToolManageService.save_custom_oauth_client_params(
             tenant_id=user.current_tenant_id,
@@ -854,6 +856,10 @@ class ToolProviderMCPApi(Resource):
     @login_required
     @account_initialization_required
     def post(self):
+        user = current_user
+        if not user.is_admin_or_owner:
+            return {"success": True}
+
         parser = reqparse.RequestParser()
         parser.add_argument("server_url", type=str, required=True, nullable=False, location="json")
         parser.add_argument("name", type=str, required=True, nullable=False, location="json")
@@ -867,7 +873,6 @@ class ToolProviderMCPApi(Resource):
         )
         parser.add_argument("headers", type=dict, required=False, nullable=True, location="json", default={})
         args = parser.parse_args()
-        user = current_user
         if not is_valid_url(args["server_url"]):
             raise ValueError("Server URL is not valid.")
         return jsonable_encoder(
@@ -890,6 +895,10 @@ class ToolProviderMCPApi(Resource):
     @login_required
     @account_initialization_required
     def put(self):
+        user = current_user
+        if not user.is_admin_or_owner:
+            return {"success": True}
+
         parser = reqparse.RequestParser()
         parser.add_argument("server_url", type=str, required=True, nullable=False, location="json")
         parser.add_argument("name", type=str, required=True, nullable=False, location="json")
@@ -926,10 +935,14 @@ class ToolProviderMCPApi(Resource):
     @login_required
     @account_initialization_required
     def delete(self):
+        user = current_user
+        if not user.is_admin_or_owner:
+            return {"success": True}
+
         parser = reqparse.RequestParser()
         parser.add_argument("provider_id", type=str, required=True, nullable=False, location="json")
         args = parser.parse_args()
-        MCPToolManageService.delete_mcp_tool(tenant_id=current_user.current_tenant_id, provider_id=args["provider_id"])
+        MCPToolManageService.delete_mcp_tool(tenant_id=user.current_tenant_id, provider_id=args["provider_id"])
         return {"result": "success"}
 
 

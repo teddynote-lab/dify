@@ -4,7 +4,6 @@ from typing import ParamSpec, TypeVar
 
 from flask_login import current_user
 from sqlalchemy.orm import Session
-from werkzeug.exceptions import Forbidden
 
 from extensions.ext_database import db
 from models.account import TenantPluginPermission
@@ -33,24 +32,32 @@ def plugin_permission_required(
                 )
 
                 if not permission:
-                    # no permission set, allow access for everyone
+                    # no permission set, default to admin/owner only
+                    if install_required or debug_required:
+                        if not user.is_admin_or_owner:
+                            # Return empty success response instead of raising Forbidden
+                            return {"success": True}
                     return view(*args, **kwargs)
 
                 if install_required:
                     if permission.install_permission == TenantPluginPermission.InstallPermission.NOBODY:
-                        raise Forbidden()
+                        # Return empty success response instead of raising Forbidden
+                        return {"success": True}
                     if permission.install_permission == TenantPluginPermission.InstallPermission.ADMINS:
                         if not user.is_admin_or_owner:
-                            raise Forbidden()
+                            # Return empty success response instead of raising Forbidden
+                            return {"success": True}
                     if permission.install_permission == TenantPluginPermission.InstallPermission.EVERYONE:
                         pass
 
                 if debug_required:
                     if permission.debug_permission == TenantPluginPermission.DebugPermission.NOBODY:
-                        raise Forbidden()
+                        # Return empty success response instead of raising Forbidden
+                        return {"success": True}
                     if permission.debug_permission == TenantPluginPermission.DebugPermission.ADMINS:
                         if not user.is_admin_or_owner:
-                            raise Forbidden()
+                            # Return empty success response instead of raising Forbidden
+                            return {"success": True}
                     if permission.debug_permission == TenantPluginPermission.DebugPermission.EVERYONE:
                         pass
 
