@@ -8,17 +8,21 @@ VERSION=latest
 .DEFAULT_GOAL := help
 
 # Backend Development Environment Setup
-.PHONY: dev-setup prepare-docker prepare-web prepare-api dev dev-stop dev-logs dev-restart
+.PHONY: dev-setup prepare-docker prepare-web prepare-api dev dev-stop dev-logs dev-restart dev-frontend
 
-# Development server - run backend in Docker, frontend locally
+# Development server - run all services in Docker (same as make up in docker directory)
 dev:
-	@echo "🚀 Starting Dify development environment..."
-	@echo "📦 Starting backend services with Docker..."
-	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml up -d api worker worker_beat nginx ssrf_proxy sandbox
+	@echo "🚀 Starting Dify development environment with Docker..."
+	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
 	@echo "⏳ Waiting for services to be ready..."
 	@sleep 5
-	@echo "🌐 Starting frontend development server locally..."
-	@cd web && pnpm dev
+	@echo "✅ All services started in Docker!"
+	@echo ""
+	@echo "📌 Access Dify at: http://localhost"
+	@echo ""
+	@echo "💡 To run frontend locally instead:"
+	@echo "   1. Stop web container: docker stop docker-web-1"
+	@echo "   2. Start local frontend: cd web && pnpm dev"
 
 # Stop development Docker services
 dev-stop:
@@ -35,6 +39,14 @@ dev-restart:
 	@echo "♻️ Restarting Docker services..."
 	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml restart
 	@echo "✅ Docker services restarted"
+
+# Run frontend locally (stop Docker web container first)
+dev-frontend:
+	@echo "🔄 Switching to local frontend development..."
+	@echo "🛑 Stopping Docker web container..."
+	@docker stop docker-web-1 2>/dev/null || echo "Web container not running"
+	@echo "🌐 Starting local frontend server..."
+	@cd web && pnpm dev
 
 # Dev setup target
 dev-setup: prepare-docker prepare-web prepare-api
@@ -135,7 +147,8 @@ build-push-all: build-all push-all
 # Help target
 help:
 	@echo "Development Setup Targets:"
-	@echo "  make dev            - Start backend in Docker, frontend locally"
+	@echo "  make dev            - Start all services in Docker"
+	@echo "  make dev-frontend   - Stop Docker web and run frontend locally"
 	@echo "  make dev-stop       - Stop Docker services"
 	@echo "  make dev-logs       - Show Docker services logs"
 	@echo "  make dev-restart    - Restart Docker services"
