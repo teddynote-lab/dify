@@ -34,7 +34,15 @@ WORKDIR /app/web
 COPY --from=packages /app/web/ .
 COPY . .
 
+# Branding build arguments
+ARG NEXT_PUBLIC_BRAND_NAME=mySUNI
+ARG NEXT_PUBLIC_BRAND_URL=https://connect.mysuni.com
+
+# Set branding environment variables for build
+ENV NEXT_PUBLIC_BRAND_NAME=$NEXT_PUBLIC_BRAND_NAME
+ENV NEXT_PUBLIC_BRAND_URL=$NEXT_PUBLIC_BRAND_URL
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN pnpm build:docker
 
 

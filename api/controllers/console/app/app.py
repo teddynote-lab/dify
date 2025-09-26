@@ -41,7 +41,7 @@ class AppListApi(Resource):
     @api.expect(
         api.parser()
         .add_argument("page", type=int, location="args", help="Page number (1-99999)", default=1)
-        .add_argument("limit", type=int, location="args", help="Page size (1-100)", default=20)
+        .add_argument("limit", type=int, location="args", help="Page size (1-200)", default=20)
         .add_argument(
             "mode",
             type=str,
@@ -70,7 +70,7 @@ class AppListApi(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument("page", type=inputs.int_range(1, 99999), required=False, default=1, location="args")
-        parser.add_argument("limit", type=inputs.int_range(1, 100), required=False, default=20, location="args")
+        parser.add_argument("limit", type=inputs.int_range(1, 200), required=False, default=20, location="args")
         parser.add_argument(
             "mode",
             type=str,

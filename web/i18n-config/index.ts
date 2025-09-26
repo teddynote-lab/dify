@@ -5,7 +5,7 @@ import { LOCALE_COOKIE_NAME } from '@/config'
 import { LanguagesSupported } from '@/i18n-config/language'
 
 export const i18n = {
-  defaultLocale: 'en-US',
+  defaultLocale: 'ko-KR',
   locales: LanguagesSupported,
 } as const
 

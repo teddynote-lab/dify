@@ -262,10 +262,13 @@ class EmailI18nService:
         template_path = template_config.branded_template_path if branding.enabled else template_config.template_path
 
         # Prepare template context with branding information
+        import os
+        brand_name = os.environ.get("NEXT_PUBLIC_BRAND_NAME", "DashFlow")
         full_context = {
             **template_context,
             "branding_enabled": branding.enabled,
             "application_title": branding.application_title if branding.enabled else "Dify",
+            "brand_name": brand_name,
         }
 
         # Render template

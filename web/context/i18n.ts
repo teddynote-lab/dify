@@ -13,7 +13,7 @@ type II18NContext = {
 }
 
 const I18NContext = createContext<II18NContext>({
-  locale: 'en-US',
+  locale: 'ko-KR',
   i18n: {},
   setLocaleOnClient: async (_lang: Locale, _reloadPage?: boolean) => {
     noop()
