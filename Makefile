@@ -8,15 +8,33 @@ VERSION=latest
 .DEFAULT_GOAL := help
 
 # Backend Development Environment Setup
-.PHONY: dev-setup prepare-docker prepare-web prepare-api dev
+.PHONY: dev-setup prepare-docker prepare-web prepare-api dev dev-stop dev-logs dev-restart
 
-# Development server - run all services
+# Development server - run backend in Docker, frontend locally
 dev:
 	@echo "🚀 Starting Dify development environment..."
-	@cd docker && docker compose -f docker-compose.middleware.yaml --env-file middleware.env -p dify-middlewares-dev up -d
-	@cd api && uv run --project . flask run --host 0.0.0.0 --port 5001 --debug &
-	@cd api && uv run --project . celery -A app.celery worker -P gevent -Q default,critical,generation,tool,workflow,app_deletion,dataset,mail,ops_trace,retrieval,embedding -l INFO &
+	@echo "📦 Starting backend services with Docker..."
+	@cd docker && docker compose up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 5
+	@echo "🌐 Starting frontend development server locally..."
 	@cd web && pnpm dev
+
+# Stop development Docker services
+dev-stop:
+	@echo "🛑 Stopping Docker services..."
+	@cd docker && docker compose down
+	@echo "✅ Docker services stopped"
+
+# Show logs for Docker services
+dev-logs:
+	@cd docker && docker compose logs -f
+
+# Restart Docker services
+dev-restart:
+	@echo "♻️ Restarting Docker services..."
+	@cd docker && docker compose restart
+	@echo "✅ Docker services restarted"
 
 # Dev setup target
 dev-setup: prepare-docker prepare-web prepare-api
@@ -117,7 +135,10 @@ build-push-all: build-all push-all
 # Help target
 help:
 	@echo "Development Setup Targets:"
-	@echo "  make dev            - Start development environment (API, Worker, Web)"
+	@echo "  make dev            - Start backend in Docker, frontend locally"
+	@echo "  make dev-stop       - Stop Docker services"
+	@echo "  make dev-logs       - Show Docker services logs"
+	@echo "  make dev-restart    - Restart Docker services"
 	@echo "  make dev-setup      - Run all setup steps for backend dev environment"
 	@echo "  make prepare-docker - Set up Docker middleware"
 	@echo "  make prepare-web    - Set up web environment"
