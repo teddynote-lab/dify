@@ -14,7 +14,7 @@ VERSION=latest
 dev:
 	@echo "🚀 Starting Dify development environment..."
 	@echo "📦 Starting backend services with Docker..."
-	@cd docker && docker compose up -d
+	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml up -d api worker worker_beat nginx ssrf_proxy sandbox
 	@echo "⏳ Waiting for services to be ready..."
 	@sleep 5
 	@echo "🌐 Starting frontend development server locally..."
@@ -23,17 +23,17 @@ dev:
 # Stop development Docker services
 dev-stop:
 	@echo "🛑 Stopping Docker services..."
-	@cd docker && docker compose down
+	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml down
 	@echo "✅ Docker services stopped"
 
 # Show logs for Docker services
 dev-logs:
-	@cd docker && docker compose logs -f
+	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml logs -f
 
 # Restart Docker services
 dev-restart:
 	@echo "♻️ Restarting Docker services..."
-	@cd docker && docker compose restart
+	@cd docker && docker compose -f docker-compose.yaml -f docker-compose.override.yaml restart
 	@echo "✅ Docker services restarted"
 
 # Dev setup target
