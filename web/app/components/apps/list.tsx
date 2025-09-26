@@ -76,6 +76,7 @@ const List = () => {
     defaultTab: 'all',
   })
   const { query: { tagIDs = [], keywords = '' }, setQuery } = useAppsQueryState()
+  const [isCreatedByMe] = useState(true)
   const [tagFilterValue, setTagFilterValue] = useState<string[]>(tagIDs)
   const [searchKeywords, setSearchKeywords] = useState(keywords)
   const newAppCardRef = useRef<HTMLDivElement>(null)
