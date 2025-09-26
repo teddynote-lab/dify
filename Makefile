@@ -8,7 +8,15 @@ VERSION=latest
 .DEFAULT_GOAL := help
 
 # Backend Development Environment Setup
-.PHONY: dev-setup prepare-docker prepare-web prepare-api
+.PHONY: dev-setup prepare-docker prepare-web prepare-api dev
+
+# Development server - run all services
+dev:
+	@echo "🚀 Starting Dify development environment..."
+	@cd docker && docker compose -f docker-compose.middleware.yaml --env-file middleware.env -p dify-middlewares-dev up -d
+	@cd api && uv run --project . flask run --host 0.0.0.0 --port 5001 --debug &
+	@cd api && uv run --project . celery -A app.celery worker -P gevent -Q default,critical,generation,tool,workflow,app_deletion,dataset,mail,ops_trace,retrieval,embedding -l INFO &
+	@cd web && pnpm dev
 
 # Dev setup target
 dev-setup: prepare-docker prepare-web prepare-api
@@ -109,6 +117,7 @@ build-push-all: build-all push-all
 # Help target
 help:
 	@echo "Development Setup Targets:"
+	@echo "  make dev            - Start development environment (API, Worker, Web)"
 	@echo "  make dev-setup      - Run all setup steps for backend dev environment"
 	@echo "  make prepare-docker - Set up Docker middleware"
 	@echo "  make prepare-web    - Set up web environment"
