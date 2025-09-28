@@ -8,6 +8,7 @@ def init_app(app: DifyApp):
     from flask_cors import CORS
 
     from controllers.console import bp as console_app_bp
+    from controllers.external import get_external_api_blueprint
     from controllers.files import bp as files_bp
     from controllers.inner_api import bp as inner_api_bp
     from controllers.mcp import bp as mcp_bp
@@ -50,3 +51,13 @@ def init_app(app: DifyApp):
 
     app.register_blueprint(inner_api_bp)
     app.register_blueprint(mcp_bp)
+
+    # Register external API blueprint if enabled
+    if dify_config.EXTERNAL_INVITATION_ENABLED:
+        external_api_bp = get_external_api_blueprint()
+        CORS(
+            external_api_bp,
+            allow_headers=["Content-Type", "X-API-Key"],
+            methods=["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
+        )
+        app.register_blueprint(external_api_bp)

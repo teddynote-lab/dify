@@ -8,6 +8,7 @@
 - [Docker 환경](#docker-환경)
 - [Azure VM 배포](#azure-vm-배포)
 - [문제 해결](#문제-해결)
+- [외부 초대 API](#외부-초대-api)
 
 ## 빠른 시작
 
@@ -604,6 +605,171 @@ az vm auto-shutdown --resource-group myResourceGroup --name myVM --time 1900
 # 비용 알림 설정
 az monitor action-group create --resource-group myResourceGroup --name cost-alerts
 ```
+
+## 외부 초대 API
+
+### 개요
+
+외부 시스템에서 편집자(Editor) 권한으로 사용자를 초대할 수 있는 RESTful API입니다.
+Single tenant 환경에서 사용하도록 설계되었으며, API 키 인증을 통해 보안을 제공합니다.
+
+### 설정 방법
+
+#### 1. 환경 변수 설정
+
+`.env` 파일에 다음 환경 변수를 설정하세요:
+
+```bash
+# 외부 초대 API 활성화
+EXTERNAL_INVITATION_ENABLED=true
+
+# API 인증 키 설정 (안전한 랜덤 문자열 사용)
+# 생성 방법: openssl rand -hex 32
+EXTERNAL_INVITATION_API_KEY=your-secure-api-key-here
+```
+
+#### 2. 서비스 재시작
+
+환경 변수 설정 후 서비스를 재시작합니다:
+
+```bash
+# Docker 사용 시
+make down
+make up
+
+# 또는 개별 컨테이너만 재시작
+docker restart docker-api-1
+```
+
+### API 사용법
+
+#### 엔드포인트
+
+```
+POST /api/v1/external/invite-editor
+```
+
+#### 요청 헤더
+
+| 헤더 | 설명 | 필수 |
+|------|------|------|
+| `X-API-Key` | 환경 변수에 설정한 API 키 | ✅ |
+| `Content-Type` | `application/json` | ✅ |
+
+#### 요청 본문
+
+```json
+{
+  "emails": ["user1@example.com", "user2@example.com"],
+  "language": "ko-KR"  // 선택사항, 기본값: "en-US"
+}
+```
+
+#### 응답 예시
+
+**성공 시:**
+```json
+{
+  "success": true,
+  "invitation_results": [
+    {
+      "email": "user1@example.com",
+      "status": "success",
+      "invitation_url": "https://your-domain/activate?email=user1@example.com&token=..."
+    },
+    {
+      "email": "user2@example.com",
+      "status": "already_member",
+      "message": "User is already a workspace member"
+    }
+  ]
+}
+```
+
+**실패 시:**
+```json
+{
+  "success": false,
+  "error": "Invalid API key"
+}
+```
+
+### 사용 예시
+
+#### cURL
+
+```bash
+curl -X POST https://your-domain/api/v1/external/invite-editor \
+  -H "X-API-Key: your-secure-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "emails": ["newuser@example.com"],
+    "language": "ko-KR"
+  }'
+```
+
+#### Python
+
+```python
+import requests
+
+url = "https://your-domain/api/v1/external/invite-editor"
+headers = {
+    "X-API-Key": "your-secure-api-key-here",
+    "Content-Type": "application/json"
+}
+data = {
+    "emails": ["newuser@example.com"],
+    "language": "ko-KR"
+}
+
+response = requests.post(url, json=data, headers=headers)
+print(response.json())
+```
+
+#### Node.js
+
+```javascript
+const axios = require('axios');
+
+const url = 'https://your-domain/api/v1/external/invite-editor';
+const headers = {
+  'X-API-Key': 'your-secure-api-key-here',
+  'Content-Type': 'application/json'
+};
+const data = {
+  emails: ['newuser@example.com'],
+  language: 'ko-KR'
+};
+
+axios.post(url, data, { headers })
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));
+```
+
+### 주의사항
+
+1. **API 키 보안**: API 키는 안전하게 보관하고 절대 공개 저장소에 커밋하지 마세요.
+2. **Single Tenant**: 이 API는 single tenant 환경용으로 설계되어 첫 번째 워크스페이스에 자동으로 사용자를 초대합니다.
+3. **권한**: 초대된 사용자는 항상 편집자(Editor) 권한을 받습니다.
+4. **이메일 전송**: 초대 이메일이 정상적으로 발송되려면 이메일 설정이 올바르게 구성되어야 합니다.
+
+### 문제 해결
+
+#### API가 응답하지 않는 경우
+1. `EXTERNAL_INVITATION_ENABLED=true` 설정 확인
+2. 서비스 재시작 여부 확인
+3. API 컨테이너 로그 확인: `docker logs docker-api-1`
+
+#### 인증 실패
+1. `X-API-Key` 헤더 존재 확인
+2. API 키가 환경 변수의 값과 일치하는지 확인
+3. 환경 변수가 올바르게 로드되었는지 확인
+
+#### 이메일이 발송되지 않는 경우
+1. SMTP 설정 확인 (`.env` 파일의 `MAIL_` 관련 설정)
+2. Worker 컨테이너 상태 확인: `docker ps | grep worker`
+3. Worker 로그 확인: `docker logs docker-worker-1`
 
 ## 지원
 
