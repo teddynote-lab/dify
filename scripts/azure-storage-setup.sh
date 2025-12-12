@@ -28,11 +28,11 @@ SCRIPT_NAME="azure-storage-setup"
 LOG_DIR="/var/log/dify-azure"
 LOG_FILE="$LOG_DIR/$SCRIPT_NAME-$(date +%Y%m%d-%H%M%S).log"
 BACKUP_DIR="/opt/dify-backups"
-MOUNT_POINT="/opt/dify-data"
-DIFY_BASE_DIR="/Users/teddy/Dev/github/10-hsad-dify/dify"
+MOUNT_POINT="/data"
+DIFY_BASE_DIR="/home/azureuser/github/dify/docker"
 AZURE_RESOURCE_GROUP=""
 AZURE_VM_NAME=""
-TARGET_DISK_SIZE="1T"
+TARGET_DISK_SIZE="1024G"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -220,7 +220,8 @@ detect_target_disk() {
     log "INFO" "Detecting target disk for Dify storage..."
 
     # List all available disks with their sizes
-    local disks=($(lsblk -nd -o NAME,SIZE | grep -E "${TARGET_DISK_SIZE}|1000" | awk '{print $1}'))
+    # Looking for 1TB disk (nvme0n2) which shows as 1024G or 1T
+    local disks=($(lsblk -nd -o NAME,SIZE | grep -E "1024G|1T" | awk '{print $1}'))
 
     if [[ ${#disks[@]} -eq 0 ]]; then
         log "ERROR" "No suitable disk found with size ${TARGET_DISK_SIZE}"
@@ -254,7 +255,14 @@ detect_target_disk() {
 
 create_partition_and_filesystem() {
     local disk="$1"
-    local partition="${disk}1"
+    local partition=""
+
+    # Determine partition naming convention
+    if [[ "$disk" =~ nvme ]]; then
+        partition="${disk}p1"  # NVMe disks use 'p1' suffix
+    else
+        partition="${disk}1"   # Regular disks use '1' suffix
+    fi
 
     log "INFO" "Creating GPT partition table on $disk..."
 
@@ -301,7 +309,14 @@ create_mount_point() {
 }
 
 mount_disk() {
-    local partition="${DETECTED_DISK}1"
+    local partition=""
+
+    # Determine partition naming convention
+    if [[ "$DETECTED_DISK" =~ nvme ]]; then
+        partition="${DETECTED_DISK}p1"  # NVMe disks use 'p1' suffix
+    else
+        partition="${DETECTED_DISK}1"   # Regular disks use '1' suffix
+    fi
 
     log "INFO" "Mounting $partition to $MOUNT_POINT..."
 
@@ -318,7 +333,15 @@ mount_disk() {
 }
 
 update_fstab() {
-    local partition="${DETECTED_DISK}1"
+    local partition=""
+
+    # Determine partition naming convention
+    if [[ "$DETECTED_DISK" =~ nvme ]]; then
+        partition="${DETECTED_DISK}p1"  # NVMe disks use 'p1' suffix
+    else
+        partition="${DETECTED_DISK}1"   # Regular disks use '1' suffix
+    fi
+
     local uuid=$(blkid -s UUID -o value "$partition")
 
     log "INFO" "Updating /etc/fstab for persistent mounting..."
@@ -351,8 +374,9 @@ detect_dify_volumes() {
         return
     fi
 
-    # Find Dify-related volumes
-    EXISTING_DIFY_VOLUMES=($(docker volume ls --format "{{.Name}}" | grep -E "(dify|docker)" | head -10))
+    # For Docker Compose bind-mount volumes, we'll handle them differently
+    # These are the actual directories in docker/volumes/
+    EXISTING_DIFY_VOLUMES=("db" "redis" "app" "plugin_daemon" "sandbox" "weaviate" "qdrant" "opensearch" "myscale" "certbot" "branding" "oceanbase")
 
     if [[ ${#EXISTING_DIFY_VOLUMES[@]} -gt 0 ]]; then
         log "INFO" "Found ${#EXISTING_DIFY_VOLUMES[@]} Dify volumes:"
@@ -392,57 +416,83 @@ create_backup() {
         log "SUCCESS" "Docker volumes backed up to $backup_archive"
     fi
 
+    # Backup existing volumes from docker directory
+    if [[ -d "$DIFY_BASE_DIR/volumes" ]]; then
+        log "INFO" "Backing up existing Docker Compose volumes..."
+        tar -czf "$BACKUP_DIR/dify-volumes-$backup_timestamp.tar.gz" \
+            -C "$DIFY_BASE_DIR" \
+            "volumes" || log "WARN" "Failed to backup Docker volumes"
+    fi
+
     # Backup Dify configuration files
     if [[ -d "$DIFY_BASE_DIR" ]]; then
         log "INFO" "Backing up Dify configuration..."
         tar -czf "$BACKUP_DIR/dify-config-$backup_timestamp.tar.gz" \
-            -C "$(dirname "$DIFY_BASE_DIR")" \
-            "$(basename "$DIFY_BASE_DIR")" \
-            --exclude="node_modules" \
-            --exclude=".git" \
-            --exclude="*.log" || log "WARN" "Failed to backup Dify configuration"
+            -C "$DIFY_BASE_DIR" \
+            ".env" "*.yaml" "*.yml" 2>/dev/null || log "WARN" "Failed to backup Dify configuration"
     fi
 }
 
 migrate_volumes() {
     log "INFO" "Migrating Dify volumes to new storage..."
 
-    # Create directories for each volume
-    for volume in "${EXISTING_DIFY_VOLUMES[@]}"; do
-        local volume_dir="$MOUNT_POINT/volumes/$volume"
-        mkdir -p "$volume_dir"
-
-        # Copy data from backup if available
-        local backup_dir="$BACKUP_DIR/volumes/$volume"
-        if [[ -d "$backup_dir" ]]; then
-            log "INFO" "Restoring volume $volume..."
-            cp -ar "$backup_dir/"* "$volume_dir/"
-        fi
-
-        # Set appropriate permissions
-        chown -R 1001:0 "$volume_dir"
-        chmod -R g+rwX "$volume_dir"
-    done
-
-    # Create symbolic links from default Docker volume location
-    local docker_volumes_path="/var/lib/docker/volumes"
-    if [[ -d "$docker_volumes_path" ]]; then
-        for volume in "${EXISTING_DIFY_VOLUMES[@]}"; do
-            local link_path="$docker_volumes_path/$volume"
-            local target_path="$MOUNT_POINT/volumes/$volume"
-
-            # Remove existing volume directory/link
-            if [[ -L "$link_path" ]]; then
-                rm "$link_path"
-            elif [[ -d "$link_path" ]]; then
-                mv "$link_path" "${link_path}.backup.$(date +%Y%m%d-%H%M%S)"
-            fi
-
-            # Create symbolic link
-            ln -sf "$target_path" "$link_path"
-            log "INFO" "Created symbolic link: $link_path -> $target_path"
-        done
+    # Stop Docker services first
+    if command -v docker >/dev/null 2>&1 && [[ -f "$DIFY_BASE_DIR/docker-compose.yaml" ]]; then
+        log "INFO" "Stopping Docker services..."
+        cd "$DIFY_BASE_DIR"
+        docker compose down || log "WARN" "Failed to stop some services"
     fi
+
+    # Create new Dify directory structure on the 1TB disk
+    mkdir -p "$MOUNT_POINT/dify/volumes"
+    mkdir -p "$MOUNT_POINT/dify/storage"
+
+    # Move existing volumes from local disk to 1TB disk
+    local source_volumes_dir="$DIFY_BASE_DIR/volumes"
+    if [[ -d "$source_volumes_dir" ]]; then
+        log "INFO" "Moving existing volumes from $source_volumes_dir to $MOUNT_POINT/dify/volumes..."
+
+        # Copy all existing volume data
+        for volume_dir in "$source_volumes_dir"/*/; do
+            if [[ -d "$volume_dir" ]]; then
+                volume_name=$(basename "$volume_dir")
+                log "INFO" "Migrating volume: $volume_name"
+
+                # Use rsync for better handling of permissions and special files
+                if command -v rsync >/dev/null 2>&1; then
+                    rsync -av --progress "$volume_dir" "$MOUNT_POINT/dify/volumes/"
+                else
+                    cp -ar "$volume_dir" "$MOUNT_POINT/dify/volumes/"
+                fi
+            fi
+        done
+
+        # Backup original volumes directory
+        mv "$source_volumes_dir" "${source_volumes_dir}.backup.$(date +%Y%m%d-%H%M%S)"
+
+        # Create symbolic link from original location to new location
+        ln -sf "$MOUNT_POINT/dify/volumes" "$source_volumes_dir"
+        log "SUCCESS" "Created symbolic link: $source_volumes_dir -> $MOUNT_POINT/dify/volumes"
+    fi
+
+    # Handle app storage directory
+    local app_storage_dir="$DIFY_BASE_DIR/volumes/app/storage"
+    if [[ ! -d "$MOUNT_POINT/dify/volumes/app/storage" ]]; then
+        mkdir -p "$MOUNT_POINT/dify/volumes/app/storage"
+    fi
+
+    # Set proper permissions for PostgreSQL
+    if [[ -d "$MOUNT_POINT/dify/volumes/db" ]]; then
+        chown -R 70:root "$MOUNT_POINT/dify/volumes/db/data/pgdata" 2>/dev/null || true
+        chmod 700 "$MOUNT_POINT/dify/volumes/db/data/pgdata" 2>/dev/null || true
+    fi
+
+    # Set proper permissions for Redis
+    if [[ -d "$MOUNT_POINT/dify/volumes/redis" ]]; then
+        chown -R 999:999 "$MOUNT_POINT/dify/volumes/redis" 2>/dev/null || true
+    fi
+
+    log "SUCCESS" "Volume migration completed"
 }
 
 #################################################################################
@@ -456,7 +506,7 @@ setup_monitoring() {
     cat > /usr/local/bin/dify-storage-monitor.sh << 'EOF'
 #!/bin/bash
 
-MOUNT_POINT="/opt/dify-data"
+MOUNT_POINT="/data"
 LOG_FILE="/var/log/dify-azure/storage-monitor.log"
 ALERT_THRESHOLD=85  # Alert when disk usage exceeds 85%
 
@@ -513,7 +563,14 @@ perform_health_check() {
     fi
 
     # Check filesystem
-    if ! fsck -n "${DETECTED_DISK}1" >/dev/null 2>&1; then
+    local partition=""
+    if [[ "$DETECTED_DISK" =~ nvme ]]; then
+        partition="${DETECTED_DISK}p1"  # NVMe disks use 'p1' suffix
+    else
+        partition="${DETECTED_DISK}1"   # Regular disks use '1' suffix
+    fi
+
+    if ! fsck -n "$partition" >/dev/null 2>&1; then
         log "ERROR" "Filesystem check failed"
         ((errors++))
     fi
@@ -561,7 +618,8 @@ echo "Starting Dify storage rollback..."
 # Stop Docker services
 if command -v docker >/dev/null 2>&1; then
     echo "Stopping Docker services..."
-    docker compose -f /path/to/docker-compose.yaml down || true
+    cd $DIFY_BASE_DIR
+    docker compose down || true
 fi
 
 # Unmount the disk
@@ -759,12 +817,13 @@ main() {
         log "SUCCESS" "Azure storage setup completed successfully!"
         echo
         log "INFO" "Next steps:"
-        log "INFO" "1. Restart Docker services: docker compose up -d"
+        log "INFO" "1. Restart Docker services: cd $DIFY_BASE_DIR && docker compose up -d"
         log "INFO" "2. Verify Dify is working correctly"
         log "INFO" "3. Monitor storage usage with: df -h $MOUNT_POINT"
         log "INFO" "4. View logs: tail -f $LOG_FILE"
         echo
         log "INFO" "Rollback script available at: /usr/local/bin/dify-storage-rollback.sh"
+        log "INFO" "Data is now stored on 1TB disk at: $MOUNT_POINT/dify/"
     else
         log "ERROR" "Setup completed with errors. Check logs for details."
         exit 1

@@ -234,3 +234,6 @@ scripts/stress-test/reports/
 # mcp
 .playwright-mcp/
 .serena/
+
+# docker setup
+docker/.env.swp
