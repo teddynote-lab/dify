@@ -44,6 +44,7 @@ class EmailType(StrEnum):
     TRIGGER_EVENTS_USAGE_WARNING_PROFESSIONAL = auto()
     API_RATE_LIMIT_LIMIT_SANDBOX = auto()
     API_RATE_LIMIT_WARNING_SANDBOX = auto()
+    FORCE_PASSWORD_RESET = auto()
 
 
 class EmailLanguage(StrEnum):
@@ -267,10 +268,13 @@ class EmailI18nService:
         template_path = template_config.branded_template_path if branding.enabled else template_config.template_path
 
         # Prepare template context with branding information
+        import os
+        brand_name = os.environ.get("NEXT_PUBLIC_BRAND_NAME", "DashFlow")
         full_context = {
             **template_context,
             "branding_enabled": branding.enabled,
             "application_title": branding.application_title if branding.enabled else "Dify",
+            "brand_name": brand_name,
         }
 
         # Render template
@@ -569,6 +573,18 @@ def create_default_email_config() -> EmailI18nConfig:
                 subject="重置您的 {application_title} 密码",
                 template_path="reset_password_mail_when_account_not_exist_no_register_template_zh-CN.html",
                 branded_template_path="without-brand/reset_password_mail_when_account_not_exist_no_register_template_zh-CN.html",
+            ),
+        },
+        EmailType.FORCE_PASSWORD_RESET: {
+            EmailLanguage.EN_US: EmailTemplate(
+                subject="Your {application_title} Password Has Been Reset",
+                template_path="force_password_reset_member_mail_template_en-US.html",
+                branded_template_path="force_password_reset_member_mail_template_en-US.html",
+            ),
+            EmailLanguage.ZH_HANS: EmailTemplate(
+                subject="您的 {application_title} 密码已被重置",
+                template_path="force_password_reset_member_mail_template_zh-CN.html",
+                branded_template_path="force_password_reset_member_mail_template_zh-CN.html",
             ),
         },
     }

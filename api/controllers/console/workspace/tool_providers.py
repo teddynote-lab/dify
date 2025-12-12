@@ -147,6 +147,9 @@ class ToolBuiltinProviderAddApi(Resource):
     def post(self, provider):
         user, tenant_id = current_account_with_tenant()
 
+        if not user.is_admin_or_owner:
+            return {"success": True}
+
         user_id = user.id
 
         args = parser_add.parse_args()
